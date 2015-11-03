@@ -1,0 +1,360 @@
+  // Todo: Write a small description of your model here
+
+Main = {
+
+  // The actual body model goes in this folder
+  AnyFolder ArmModel = {
+    AnyObjectSearchString MuscleString = "Main.ArmModel.*.Fm";    
+
+    // Global Reference Frame
+    AnyFixedRefFrame GlobalRef = {
+
+//      AnyDrawRefFrame DrwGlobalRef = {};
+      AnyRefNode Shoulder = { 
+        sRel = {0,0,0}; 
+      };
+      AnyRefNode DeltodeusA = { 
+        sRel = {0.05,0,0}; 
+      };
+      AnyRefNode DeltodeusB = { 
+        sRel = {-0.05,0,0}; 
+      };
+      AnyRefNode BicepsLong = { 
+        sRel = {0.1,0,0}; 
+      };
+      AnyRefNode TricepsLong = { 
+        sRel = {-0.1,0,0}; 
+      };
+
+    };  // Global reference frame
+
+    // Segments
+    AnyFolder Segs = {
+
+      AnySeg UpperArm = {
+        r0 = {0,-0.15,0};
+        Axes0 = {{0,1,0},{-1,0,0},{0,0,1}};
+        Mass = 2.0;
+        Jii = {0.001,0.01,0.01};
+        AnyDrawSeg DrwSeg = {};
+        AnyRefNode ShoulderNode = {
+          sRel = {-0.2,0,0}; 
+        };
+        AnyRefNode ElbowNode = {
+          sRel = {0.2,0,0}; 
+        };
+        AnyRefNode DeltodeusA = { 
+          sRel = {-0.1,0,0.0}; 
+        };
+        AnyRefNode DeltodeusB = { 
+          sRel = {-0.1,0,-0.0}; 
+        };
+        AnyRefNode Brachialis = { 
+          sRel = {0.1,0,0.0}; 
+        };
+        AnyRefNode BicepsShort = { 
+          sRel = {-0.1,0,0.0}; 
+        };
+        AnyRefNode Brachioradialis = { 
+          sRel = {0.05,0,0.0}; 
+        };
+        AnyRefNode TricepsShort = { 
+          sRel = {-0.1,0,0.0}; 
+        };
+      }; // UpperArm
+
+      AnySeg LowerArm = {
+        r0 = {0.25,-0.3,0};
+        Mass = 2.0;
+        Jii = {0.001,0.01,0.01};
+        AnyRefNode ElbowNode = {
+          sRel = {-0.2,0,0};
+        };
+        AnyRefNode HandNode = {
+          sRel = {0.2,0,0};
+        };
+        AnyRefNode Brachialis = { 
+          sRel = {-0.1,0,0.0}; 
+        };
+        AnyRefNode Brachioradialis = { 
+          sRel = {0.0,0,0.0}; 
+        };
+        AnyRefNode Biceps = { 
+          sRel = {-0.15,0,0.0}; 
+        };
+        AnyRefNode Triceps = { 
+          sRel = {-0.25,0,0.0}; 
+        };
+        AnyRefNode PalmNode = {
+          sRel = {0.27,0,0};
+          ARel = RotMat(pi/2,y);
+        };
+        AnyDrawSeg DrwSeg = {};
+     }; // LowerArm
+     
+     AnySeg Dumbbell = {
+       r0 = {0.45, -0.3, 0};
+       Jii = {1,1,1}*0.01;
+       Mass = 10;
+       Axes0=RotMat(pi/2,y);
+       AnyDrawSTL DrwSTL = {
+         FileName = "dumbbell.stl";
+         ScaleXYZ = {0.001, 0.001, 0.001};
+         RGB = {0.2,0.4,0.5};
+       };
+     };
+     
+   }; // Segs folder
+
+    AnyFolder Jnts = {
+
+      //---------------------------------
+      AnyRevoluteJoint Shoulder = {
+        Axis = z;
+        AnyRefNode &GroundNode = ..GlobalRef.Shoulder;
+        AnyRefNode &UpperArmNode = ..Segs.UpperArm.ShoulderNode;
+      }; // Shoulder joint
+
+      AnyRevoluteJoint Elbow = {
+        Axis = z;
+        AnyRefNode &UpperArmNode = ..Segs.UpperArm.ElbowNode;
+        AnyRefNode &LowerArmNode = ..Segs.LowerArm.ElbowNode;
+      }; // Elbow joint
+      
+      AnyStdJoint HandDumbell = {
+        AnyRefFrame &n1 = ..Segs.LowerArm.PalmNode;
+        AnyRefFrame &n2 = ..Segs.Dumbbell;
+      };
+        
+
+    }; // Jnts folder
+
+    AnyFolder Drivers = {
+
+      //---------------------------------
+      AnyKinEqSimpleDriver ShoulderMotion = {
+        AnyRevoluteJoint &Jnt = ..Jnts.Shoulder;
+        DriverPos = {-1.7};
+        DriverVel = {0.4};
+        Reaction.Type = {0};
+      }; // Shoulder driver
+      
+      
+      AnyKinEqInterPolDriver LineMotion = {
+        T = {0.0, 0.25, 0.50, 0.75, 1};
+        Data = {{0.6, 0.2, 0.5, 0.8, 0.4}};
+        Type = Bspline;
+        BsplineOrder = 4;
+        AnyKinPLine LinearMeasure = {
+          AnyRefFrame &Shoulder = Main.ArmModel.Segs.UpperArm.ShoulderNode;
+          AnyRefFrame &Hand = Main.ArmModel.Segs.LowerArm.HandNode;
+        };
+      };
+    }; // Driver folder
+
+    AnyFolder Muscles = {
+
+      // Simple muscle model with constant strength
+      AnyMuscleModel MusMdl = {
+        F0 = 1500;
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle Brachialis = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..Segs.UpperArm.Brachialis;
+        AnyRefNode &Ins = ..Segs.LowerArm.Brachialis;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle DeltodeusA = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..GlobalRef.DeltodeusA;
+        AnyRefNode &Ins = ..Segs.UpperArm.DeltodeusA;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle DeltodeusB = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..GlobalRef.DeltodeusB;
+        AnyRefNode &Ins = ..Segs.UpperArm.DeltodeusB;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle Brachioradialis = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..Segs.UpperArm.Brachioradialis;
+        AnyRefNode &Ins = ..Segs.LowerArm.Brachioradialis;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle BicepsShort = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..Segs.UpperArm.BicepsShort;
+        AnyRefNode &Ins = ..Segs.LowerArm.Biceps;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle TricepsShort = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..Segs.UpperArm.TricepsShort;
+        AnyRefNode &Ins = ..Segs.LowerArm.Triceps;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle BicepsLong = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..GlobalRef.BicepsLong;
+        AnyRefNode &Ins = ..Segs.LowerArm.Biceps;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+
+      //---------------------------------
+      AnyViaPointMuscle TricepsLong = {
+        AnyMuscleModel &MusMdl = ..Muscles.MusMdl;
+        AnyRefNode &Org = ..GlobalRef.TricepsLong;
+        AnyRefNode &Ins = ..Segs.LowerArm.Triceps;
+        AnyDrawMuscle DrwMus = {
+          Bulging = 1;
+        };
+      };
+    
+      //AnyMuscleActivityBound BicepsLowerBound = //primjer ogranicenja sile misica
+      //{
+//        //LowerBoundOnOff = On;
+        //LowerBound = 0.55;
+        //UpperBoundOnOff = On;
+        //UpperBound = 0.6;
+        //AnyMuscle &muscle = Main.ArmModel.Muscles.BicepsLong;
+      //};
+
+     // AnyMuscleActivityConstraint MuscleLink = //CP primjer
+      //{
+        //CType = EqualToZero;
+        //nCon = 1;
+        //Coef = {{-1.0, 1.0}};
+       // Const = {-t+1};
+       // AnyMuscle &m0 = Main.ArmModel.Muscles.BicepsLong;
+       // AnyMuscle &m1 = Main.ArmModel.Muscles.BicepsShort; 
+      //};
+
+      //AnyMuscleActivityBound TricepsLongBound = //spaciticy problem...misic tricepsa se trza ovisno o tome koliko je rastegnut 
+      //{
+        //LowerBoundOnOff = On;
+        //LowerBound = min({1.0, 2*Main.ArmModel.Muscles.TricepsLong.LmtDot});
+        //AnyMuscle &muscle = Main.ArmModel.Muscles.TricepsLong;
+      //};
+
+    }; // Muscles folder
+  
+    GlobalRef  = { //sada radimo plitke zglobove - rame u ovom slucaju....ovdje je opet globalref iako posotji prije...to znaci da samo nadogradjujemo ono sto je bilo prije
+      AnyRefNode Glenoid1 = {
+        sRel = {-0.2, 1.0, 0}*0.03;
+        AnyDrawNode drw = {
+          ScaleXYZ = {1, 1, 1}*0.01;
+          RGB = {1,0,0};
+        };
+      };
+      AnyRefNode Glenoid2 = {
+        sRel = {-1, -1, 0}*0.03;
+        AnyDrawNode drw = {
+          ScaleXYZ = {1, 1, 1}*0.01;
+          RGB = {1,0,0};
+        };
+      };
+    };
+    
+    AnyGeneralMuscle GlenReac = 
+    {
+      ForceDirection = 1;
+      AnyKinPLine line = 
+      {
+        AnyRefFrame &glen = Main.ArmModel.GlobalRef.Glenoid1;
+        AnyRefFrame &hum = Main.ArmModel.Segs.UpperArm.ShoulderNode;
+        //AnyRefFrame &<Insert name2> = <Insert object reference (or full object definition)>; You can make any number of these objects!
+      };
+      AnyMuscleModel &Model = .MusModel;
+    };
+      AnyMuscleModel MusModel = 
+      {
+        F0 = 10000;
+      };
+    Main.ArmModel.Jnts.Shoulder.Constraints.Reaction.Type = {Off, Off, On, On, On}; 
+
+    /*Main.ArmModel.Jnts.Shoulder.Constraints.Reaction.Type = {Off, Off, On, On, On}; //simuliramo slabe zglobove
+    AnyMuscleModel ArtMuscleModel = {
+      F0 = 1400; //pretpostavili smo da je nakon ovoga javlja bol (prije je islo do 1500) - 1000 se javljao problem preopterecenja misica pa smo se malo igrlai s ovim vrijednostima tako da ne mora biti 1000
+    };
+    
+    AnyGeneralMuscle shoulderX1 = 
+    {
+      ForceDirection = -1; //pulling direction
+      AnyKinMeasureOrg org = {
+      AnyKinMeasure &lin = Main.ArmModel.Jnts.Shoulder.Linear; //ovo radimo jer linear ima tri vrijednosti a nama treba samo jedna ....za to sluzi ovaj organizer
+      MeasureOrganizer = {0};
+    };
+      AnyMuscleModel &model = .ArtMuscleModel;
+    };
+
+    AnyGeneralMuscle shoulderX2 = 
+    {
+      ForceDirection = 1; //pushing direction
+      AnyKinMeasureOrg org = {
+      AnyKinMeasure &lin = Main.ArmModel.Jnts.Shoulder.Linear; //ovo radimo jer linear ima tri vrijednosti a nama treba samo jedna ....za to sluzi ovaj organizer
+      MeasureOrganizer = {0};
+    };
+      AnyMuscleModel &model = .ArtMuscleModel;
+    };
+    
+    AnyGeneralMuscle shoulderY1 = 
+    {
+      ForceDirection = -1; //pulling direction
+      AnyKinMeasureOrg org = {
+      AnyKinMeasure &lin = Main.ArmModel.Jnts.Shoulder.Linear; //ovo radimo jer linear ima tri vrijednosti a nama treba samo jedna ....za to sluzi ovaj organizer
+     MeasureOrganizer = {1};    
+    };
+      AnyMuscleModel &model = .ArtMuscleModel;
+    };
+    
+    AnyGeneralMuscle shoulderY2 = 
+    {
+      ForceDirection = 1; //pushing direction
+      AnyKinMeasureOrg org = {
+      AnyKinMeasure &lin = Main.ArmModel.Jnts.Shoulder.Linear; //ovo radimo jer linear ima tri vrijednosti a nama treba samo jedna ....za to sluzi ovaj organizer
+     MeasureOrganizer = {1};   
+   };
+      AnyMuscleModel &model = .ArtMuscleModel;
+    };*/
+    
+  }; // ArmModel
+
+  // The study: Operations to be performed on the model
+  AnyBodyStudy ArmStudy = {
+    AnyFolder &Model = .ArmModel;
+    Gravity = {0.0, -9.81, 0.0};
+    //InverseDynamics.Criterion.LowerBoundOnOff = On;
+    //InverseDynamics.Criterion.LowerBound = 0.5; //svaki misic ce raditi minimalno 10%
+    
+  };
+
+};  // Main
