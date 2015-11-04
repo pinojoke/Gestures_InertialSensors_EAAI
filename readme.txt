@@ -6,4 +6,8 @@
 
 - Gyroscope was set to +-110 deg/s measurement range, while accelerometer was set to +-1.5 g range.
 
+- Data is in comma separated format (.CSV) where each column contains the following data (from left to right): AccelerometerWrist_X, AccelerometerWrist_Y, AccelerometerWrist_Z, GyroscopeWrist_X, GyroscopeWrist_Z, AccelerometerFinger_X, AccelerometerFinger_Y, AccelerometerFinger_Z, GyroscopeFinger_X, GyroscopeFinger_Z, TimeStamp
+
+- For a details about sensor placement, please consult manuscript in question where this is explained in more detail
+
 
