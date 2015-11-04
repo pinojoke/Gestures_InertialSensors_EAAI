@@ -8,6 +8,8 @@
 
 - Data is in comma separated format (.CSV) where each column contains the following data (from left to right): AccelerometerWrist_X, AccelerometerWrist_Y, AccelerometerWrist_Z, GyroscopeWrist_X, GyroscopeWrist_Z, AccelerometerFinger_X, AccelerometerFinger_Y, AccelerometerFinger_Z, GyroscopeFinger_X, GyroscopeFinger_Z, TimeStamp
 
-- For a details about sensor placement, please consult manuscript in question where this is explained in more detail
+- For a details about sensor placement, please consult manuscript in question where this is explained in more detail.
+
+- The database is available under Cretive Commons 4.0 International Public NonComercial Licencse (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
 
 
