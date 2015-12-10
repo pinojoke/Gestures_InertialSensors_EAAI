@@ -8,6 +8,8 @@
 
 - Data is in comma separated format (.CSV) where each column contains the following data (from left to right): AccelerometerWrist_X, AccelerometerWrist_Y, AccelerometerWrist_Z, GyroscopeWrist_X, GyroscopeWrist_Z, AccelerometerFinger_X, AccelerometerFinger_Y, AccelerometerFinger_Z, GyroscopeFinger_X, GyroscopeFinger_Z, TimeStamp
 
+- Each row represent time instance of the measurement. During one measurement (recorded in the file of general form subjectXX_measurementYY) all 9 gestures were executed once in succession with short pause between gestures (from Gesture 1 to Gesture 9).
+
 - For a details about sensor placement, please consult manuscript in question where this is explained in more detail.
 
 - The database is available under Cretive Commons 4.0 International Public NonComercial Licencse (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
